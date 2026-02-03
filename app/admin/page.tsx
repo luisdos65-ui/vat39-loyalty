@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Lock, LogOut, CheckCircle, Search } from 'lucide-react';
+import { Loader2, Lock, LogOut, CheckCircle, Search, QrCode } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
+  const router = useRouter();
   const [session, setSession] = useState<any>(null);
+
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,6 +43,10 @@ export default function AdminPage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+  };
+
+  const navigateToQr = () => {
+    router.push('/admin/qr');
   };
 
   const handleRedeem = async (e: React.FormEvent) => {
