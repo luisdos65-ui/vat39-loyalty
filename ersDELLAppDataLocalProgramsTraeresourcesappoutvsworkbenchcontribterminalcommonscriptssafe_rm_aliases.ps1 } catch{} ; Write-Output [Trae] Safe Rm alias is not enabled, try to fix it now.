@@ -1,0 +1,30 @@
+[33mcommit 4e8e2c3914d80097e3710372b25b88d381d34bb1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: luisdos65-ui <luisdos65@gmail.com>
+Date:   Tue Feb 3 16:33:49 2026 +0100
+
+    Initial_commit
+
+ .gitignore                    |   29 [32m+[m
+ README.md                     |   36 [32m+[m
+ app/admin/page.tsx            |  186 [32m++[m
+ app/admin/qr/page.tsx         |   82 [32m+[m
+ app/api/admin/redeem/route.ts |   82 [32m+[m
+ app/api/card/route.ts         |   57 [32m+[m
+ app/api/checkin/route.ts      |  148 [32m++[m
+ app/card/page.tsx             |  117 [32m++[m
+ app/checkin/page.tsx          |   74 [32m+[m
+ app/globals.css               |   20 [32m+[m
+ app/layout.tsx                |   27 [32m+[m
+ app/page.tsx                  |   42 [32m+[m
+ lib/hooks/useDevice.ts        |   22 [32m+[m
+ lib/supabase.ts               |   25 [32m+[m
+ next-env.d.ts                 |    5 [32m+[m
+ next.config.js                |    6 [32m+[m
+ package-lock.json             | 4524 [32m+++++++++++++++++++++++++++++++++++++++++[m
+ package.json                  |   34 [32m+[m
+ postcss.config.js             |    6 [32m+[m
+ start_app.bat                 |   23 [32m+[m
+ supabase_migrations.sql       |   73 [32m+[m
+ tailwind.config.ts            |   19 [32m+[m
+ tsconfig.json                 |   26 [32m+[m
+ 23 files changed, 5663 insertions(+)
