@@ -37,6 +37,16 @@ create table if not exists public.settings (
   value jsonb not null
 );
 
+-- 5. Admins Table
+create table if not exists public.admins (
+  id uuid primary key default uuid_generate_v4(),
+  auth_user_id uuid references auth.users(id) on delete cascade not null,
+  email text not null,
+  name text,
+  role text default 'admin',
+  created_at timestamptz default now()
+);
+
 -- Seed Settings (Idempotent: skips if exists)
 insert into public.settings (key, value) values
 ('loyalty_rules', '{"visits_required": 5, "reward_percent": 5, "cooldown_hours": 12}'),
@@ -48,12 +58,14 @@ alter table public.devices enable row level security;
 alter table public.checkins enable row level security;
 alter table public.vouchers enable row level security;
 alter table public.settings enable row level security;
+alter table public.admins enable row level security;
 
 -- Drop policies if they exist (to avoid "policy already exists" errors)
 drop policy if exists "Admins can do everything on devices" on public.devices;
 drop policy if exists "Admins can do everything on checkins" on public.checkins;
 drop policy if exists "Admins can do everything on vouchers" on public.vouchers;
 drop policy if exists "Admins can do everything on settings" on public.settings;
+drop policy if exists "Admins can do everything on admins" on public.admins;
 
 -- Re-create Policies
 -- SERVICE_ROLE (Server-side) has full access
@@ -70,4 +82,7 @@ create policy "Admins can do everything on vouchers" on public.vouchers
   for all to authenticated using (true) with check (true);
 
 create policy "Admins can do everything on settings" on public.settings
+  for all to authenticated using (true) with check (true);
+
+create policy "Admins can do everything on admins" on public.admins
   for all to authenticated using (true) with check (true);
