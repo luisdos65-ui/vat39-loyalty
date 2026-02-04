@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Lock, LogOut, CheckCircle, Search, QrCode } from 'lucide-react';
+import { Loader2, Lock, LogOut, CheckCircle, Search, QrCode, Users, Calendar, Ticket } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
@@ -15,9 +15,17 @@ export default function AdminPage() {
   const [voucherCode, setVoucherCode] = useState('');
   const [redeemStatus, setRedeemStatus] = useState<any>(null);
 
+  const [stats, setStats] = useState({
+    totalDevices: 0,
+    checkinsToday: 0,
+    activeVouchers: 0,
+    recentDevices: [] as any[]
+  });
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session) fetchStats();
       setLoading(false);
     });
 
@@ -25,10 +33,60 @@ export default function AdminPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) fetchStats();
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      // 1. Totaal aantal unieke apparaten (klanten)
+      const { count: deviceCount } = await supabase
+        .from('devices')
+        .select('*', { count: 'exact', head: true });
+
+      // 2. Checkins vandaag
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count: checkinsCount } = await supabase
+        .from('checkins')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', today.toISOString());
+
+      // 3. Actieve vouchers
+      const { count: voucherCount } = await supabase
+        .from('vouchers')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .is('redeemed_at', null);
+
+      // 4. Recente klanten ophalen
+      const { data: devices } = await supabase
+        .from('devices')
+        .select('*')
+        .order('last_seen_at', { ascending: false })
+        .limit(10);
+
+      // Extra: Checkin counts per device ophalen (simpele implementatie)
+      const devicesWithCounts = await Promise.all((devices || []).map(async (dev) => {
+        const { count } = await supabase
+          .from('checkins')
+          .select('*', { count: 'exact', head: true })
+          .eq('device_id', dev.device_id);
+        return { ...dev, checkins_count: count };
+      }));
+
+      setStats({
+        totalDevices: deviceCount || 0,
+        checkinsToday: checkinsCount || 0,
+        activeVouchers: voucherCount || 0,
+        recentDevices: devicesWithCounts || []
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,15 +231,50 @@ export default function AdminPage() {
         </form>
       </div>
 
-      {/* Quick Links */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-purple-50 p-4 rounded-xl text-center">
-          <div className="text-2xl font-bold text-primary">--</div>
+        <div className="bg-blue-50 p-4 rounded-xl text-center border border-blue-100">
+          <Users className="h-6 w-6 text-blue-500 mx-auto mb-2" />
+          <div className="text-2xl font-bold text-blue-700">{stats.totalDevices}</div>
+          <div className="text-xs text-slate-500">Totaal Klanten</div>
+        </div>
+        <div className="bg-purple-50 p-4 rounded-xl text-center border border-purple-100">
+          <Calendar className="h-6 w-6 text-purple-500 mx-auto mb-2" />
+          <div className="text-2xl font-bold text-purple-700">{stats.checkinsToday}</div>
           <div className="text-xs text-slate-500">Checkins Vandaag</div>
         </div>
-        <div className="bg-purple-50 p-4 rounded-xl text-center">
-          <div className="text-2xl font-bold text-primary">--</div>
-          <div className="text-xs text-slate-500">Actieve Vouchers</div>
+        <div className="bg-green-50 p-4 rounded-xl text-center border border-green-100 col-span-2">
+          <Ticket className="h-6 w-6 text-green-500 mx-auto mb-2" />
+          <div className="text-2xl font-bold text-green-700">{stats.activeVouchers}</div>
+          <div className="text-xs text-slate-500">Openstaande Vouchers</div>
+        </div>
+      </div>
+
+      {/* Recent Customers List */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-4 bg-slate-50 border-b border-slate-100">
+          <h3 className="font-semibold text-slate-700">Recente Klanten</h3>
+        </div>
+        <div className="divide-y divide-slate-100">
+          {stats.recentDevices.length === 0 ? (
+            <div className="p-4 text-center text-sm text-slate-400">Nog geen klanten gezien.</div>
+          ) : (
+            stats.recentDevices.map((dev) => (
+              <div key={dev.device_id} className="p-4 flex justify-between items-center">
+                <div>
+                  <div className="text-sm font-medium text-slate-700">
+                    Klant ...{dev.device_id.slice(0, 8)}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    Laatst gezien: {new Date(dev.last_seen_at).toLocaleDateString()} {new Date(dev.last_seen_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </div>
+                </div>
+                <div className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">
+                  {dev.checkins_count} checkins
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
