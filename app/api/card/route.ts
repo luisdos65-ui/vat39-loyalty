@@ -43,7 +43,15 @@ export async function GET(req: NextRequest) {
       .eq('is_active', true)
       .single();
 
+    // Get device info (name, email)
+    const { data: device } = await supabase
+      .from('devices')
+      .select('name, email')
+      .eq('device_id', device_id)
+      .single();
+
     return NextResponse.json({
+      device,
       checkin_count: count || 0,
       visits_required: VISITS_REQUIRED,
       reward_available: !!activeVoucher,
