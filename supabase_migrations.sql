@@ -11,7 +11,9 @@ create table if not exists public.devices (
   last_seen_at timestamptz default now(),
   created_at timestamptz default now(),
   banned boolean default false,
-  notes text
+  notes text,
+  name text,
+  email text
 );
 
 -- 2. Checkins Table

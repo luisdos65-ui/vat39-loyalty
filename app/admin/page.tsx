@@ -263,8 +263,13 @@ export default function AdminPage() {
               <div key={dev.device_id} className="p-4 flex justify-between items-center">
                 <div>
                   <div className="text-sm font-medium text-slate-700">
-                    Klant ...{dev.device_id.slice(0, 8)}
+                    {dev.name ? dev.name : `Klant ...${dev.device_id.slice(0, 8)}`}
                   </div>
+                  {dev.email && (
+                    <div className="text-xs text-slate-500 truncate max-w-[200px]" title={dev.email}>
+                      {dev.email}
+                    </div>
+                  )}
                   <div className="text-xs text-slate-400">
                     Laatst gezien: {new Date(dev.last_seen_at).toLocaleDateString()} {new Date(dev.last_seen_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </div>
